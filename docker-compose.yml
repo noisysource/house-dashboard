@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # MQTT Broker
+  mqtt-broker:
+    image: eclipse-mosquitto:2
+    container_name: house-dashboard-mqtt
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./be/mqtt-broker/config:/mosquitto/config
+      - ./be/mqtt-broker/data:/mosquitto/data
+      - ./be/mqtt-broker/log:/mosquitto/log
+    restart: unless-stopped
+  
+  # Power Service
+  power-service:
+    build:
+      context: ./be/packages/power-service
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - MQTT_BROKER=mqtt://mqtt-broker:1883
+      - MQTT_USERNAME=house_dashboard
+      - MQTT_PASSWORD=your_password
+      - MQTT_TOPIC=shellies/#
+    depends_on:
+      - mqtt-broker
+  
+  # Frontend
+  frontend:
+    build:
+      context: ./fe
+    ports:
+      - "80:80"
+    environment:
+      - REACT_APP_API_URL=http://localhost:3001
+      - REACT_APP_WS_URL=ws://localhost:3001/ws
+    depends_on:
+      - power-service
