@@ -1,0 +1,59 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Start Power Service",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "${workspaceFolder}/be/packages/power-service",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Start Frontend",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start"],
+      "cwd": "${workspaceFolder}/fe",
+      "env": {
+        "BROWSER": "none"
+      },
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Debug Power Service",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/be/packages/power-service/src/index.ts",
+      "cwd": "${workspaceFolder}/be/packages/power-service",
+      "runtimeArgs": ["-r", "ts-node/register"],
+      "sourceMaps": true,
+      "outFiles": ["${workspaceFolder}/be/packages/power-service/dist/**/*.js"],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Test MQTT Publishing",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/test/mqtt-test.js",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Development Environment",
+      "configurations": ["Start Power Service", "Start Frontend"]
+    }
+  ]
+}
