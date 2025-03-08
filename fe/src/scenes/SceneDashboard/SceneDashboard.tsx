@@ -10,8 +10,8 @@ import SecurityIcon from '@mui/icons-material/Security';
 import TvIcon from '@mui/icons-material/Tv';
 import MeteoCard from "../../components/power/MeteoCard";
 import FullCalendarComponent from "../../components/calendar/FullCalendarComponent";
-import AmperageGaugeSection from "../../components/power/AmperageGaugeSection";
-import PowerConsumptionSection from "../../components/power/PowerConsumptionSection";
+import PowerConsumptionSection from "../../components/power/PowerBriefSection";
+import PowerBriefSection from "../../components/power/PowerBriefSection";
 
 const SceneDashboard = () => {
   const theme = useTheme();
@@ -93,11 +93,8 @@ const SceneDashboard = () => {
               </Typography>
               <Box sx={{ flexGrow: 1 }}>
                 <Grid container spacing={2}>
-                  <Grid size={4}>
-                    <AmperageGaugeSection />
-                  </Grid>
                   <Grid size={8}>
-                    <PowerConsumptionSection />
+                    <PowerBriefSection />
                   </Grid>
                 </Grid>
               </Box>

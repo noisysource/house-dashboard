@@ -1,14 +1,29 @@
 import dotenv from 'dotenv';
-dotenv.config();
-
+import path from 'path';
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
 import { setupWebSocketServer } from './services/websocket-service';
 import { connectMqtt } from './services/mqtt-service';
 import powerRoutes from './routes/power-routes';
+import mongoose from 'mongoose';
+
+// Load environment variables
+dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
 
 const app = express();
+
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/house_dashboard';
+
+// Connect to MongoDB
+mongoose
+    .connect(MONGO_URI)
+    .then(() => {
+        console.log('Connected to MongoDB');
+    })
+    .catch((err) => {
+        console.error('MongoDB connection error:', err);
+    });
 
 // Middleware
 app.use(cors());
@@ -32,7 +47,7 @@ setupWebSocketServer(server);
 connectMqtt();
 
 // Start server
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.POWER_SERVICE_PORT || 3001;
 server.listen(PORT, () => {
     console.log(`Power service running on port ${PORT}`);
 });

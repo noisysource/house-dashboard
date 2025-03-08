@@ -4,6 +4,7 @@ import usePowerData from './usePowerData';
 export interface PowerStats {
   current: {
     power: number; // Current power consumption in watts
+    current: number; // Current load in amps
     today: number; // kWh used today
     week: number;  // kWh used this week
     month: number; // kWh used this month
@@ -16,11 +17,42 @@ export interface PowerStats {
   loading: boolean;
 }
 
-// Sample data generator for development
+// GraphQL endpoint
+const GRAPHQL_ENDPOINT = process.env.REACT_APP_GRAPHQL_ENDPOINT || 'http://localhost:4000/graphql';
+
+// GraphQL queries
+const POWER_STATS_QUERY = `
+  query GetPowerStats($period: String!) {
+    powerStats(period: $period) {
+      current {
+        power
+        today
+        week
+        month
+      }
+      history {
+        hourly {
+          timestamp
+          value
+        }
+        daily {
+          timestamp
+          value
+        }
+        monthly {
+          timestamp
+          value
+        }
+      }
+    }
+  }
+`;
+
+// Keep your existing sample data generation for fallback
 const generateSampleData = (period: string) => {
   const now = new Date();
   const data: [string, number][] = [];
-  
+
   if (period === '24h') {
     // Generate hourly data for last 24 hours
     for (let i = 0; i < 24; i++) {
@@ -49,7 +81,7 @@ const generateSampleData = (period: string) => {
       data.push([date.toISOString().split('T')[0], baseValue]);
     }
   }
-  
+
   return data;
 };
 
@@ -58,6 +90,7 @@ const usePowerStats = () => {
   const [stats, setStats] = useState<PowerStats>({
     current: {
       power: 0,
+      current: 0, // Add current property
       today: 0,
       week: 0,
       month: 0,
@@ -71,41 +104,83 @@ const usePowerStats = () => {
   });
   
   const [selectedPeriod, setSelectedPeriod] = useState<'24h' | 'week' | 'month'>('24h');
+  const [error, setError] = useState<string | null>(null);
   
-  // Effect to update current power from websocket data
+  // Update current power from WebSocket when available
   useEffect(() => {
-    if (powerData && powerData.totalPower !== undefined) {
+    if (powerData) {
       setStats(prev => ({
         ...prev,
         current: {
           ...prev.current,
-          power: powerData.totalPower || 0
+          power: powerData.totalPower || 0,
+          current: powerData.totalCurrent || 0 // Add current from websocket data
         },
         loading: false
       }));
     }
   }, [powerData]);
   
-  // Effect to fetch historical data
+  // Fetch historical data from GraphQL API
   useEffect(() => {
-    const fetchHistoricalData = async () => {
+    const fetchPowerStats = async () => {
       setStats(prev => ({ ...prev, loading: true }));
       
       try {
-        // In a real app, you'd fetch from your API here:
-        // const response = await fetch(`/api/power/history?period=${selectedPeriod}`);
-        // const data = await response.json();
+        // GraphQL request
+        const response = await fetch(GRAPHQL_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query: POWER_STATS_QUERY,
+            variables: { period: selectedPeriod },
+          }),
+        });
         
-        // For now, use sample data
+        const result = await response.json();
+        
+        if (result.errors) {
+          throw new Error(result.errors[0].message);
+        }
+        
+        // Format the time series data from GraphQL
+        const formatTimeSeriesData = (timeSeries: { timestamp: string, value: number }[]): [string, number][] => {
+          return timeSeries.map(point => [point.timestamp, point.value]);
+        };
+        
+        setStats({
+          current: {
+            // Use real-time power from WebSocket if available, otherwise from GraphQL
+            power: powerData?.totalPower ?? result.data.powerStats.current.power,
+            current: powerData?.totalCurrent ?? 0, // Add current property
+            today: result.data.powerStats.current.today,
+            week: result.data.powerStats.current.week,
+            month: result.data.powerStats.current.month,
+          },
+          history: {
+            hourly: formatTimeSeriesData(result.data.powerStats.history.hourly || []),
+            daily: formatTimeSeriesData(result.data.powerStats.history.daily || []),
+            monthly: formatTimeSeriesData(result.data.powerStats.history.monthly || []),
+          },
+          loading: false
+        });
+        
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching power stats:', err);
+        setError('Failed to fetch power data from GraphQL API');
+        
+        // Fallback to sample data generation
         const sampleData = generateSampleData(selectedPeriod);
         
-        // Calculate kWh totals
+        // Calculate kWh totals from sample data
         let todayKwh = 0;
         let weekKwh = 0;
         let monthKwh = 0;
         
         if (selectedPeriod === '24h') {
-          // Sum up power readings and convert to kWh
           todayKwh = sampleData.reduce((sum, [_, value]) => sum + value, 0) / 1000;
           weekKwh = todayKwh * 7;
           monthKwh = todayKwh * 30;
@@ -134,21 +209,17 @@ const usePowerStats = () => {
           },
           loading: false
         }));
-        
-      } catch (error) {
-        console.error('Error fetching power history:', error);
-        setStats(prev => ({ ...prev, loading: false }));
       }
     };
     
-    fetchHistoricalData();
+    fetchPowerStats();
     
-    // Set up interval to refresh data (every 5 minutes)
-    const intervalId = setInterval(fetchHistoricalData, 5 * 60 * 1000);
+    // Refresh data periodically (every 5 minutes)
+    const intervalId = setInterval(fetchPowerStats, 5 * 60 * 1000);
     return () => clearInterval(intervalId);
-  }, [selectedPeriod]);
+  }, [selectedPeriod, powerData?.totalPower, powerData?.totalCurrent]);
   
-  return { stats, selectedPeriod, setSelectedPeriod };
+  return { stats, selectedPeriod, setSelectedPeriod, error };
 };
 
 export default usePowerStats;

@@ -10,7 +10,7 @@ services:
       - ./be/mqtt-broker/data:/mosquitto/data
       - ./be/mqtt-broker/log:/mosquitto/log
     restart: unless-stopped
-  
+
   # Power Service
   power-service:
     build:
@@ -25,7 +25,7 @@ services:
       - MQTT_TOPIC=shellies/#
     depends_on:
       - mqtt-broker
-  
+
   # Frontend
   frontend:
     build:
@@ -37,3 +37,34 @@ services:
       - REACT_APP_WS_URL=ws://localhost:3001/ws
     depends_on:
       - power-service
+
+  # Add to your existing docker-compose.yml
+  mongodb:
+    image: mongo:latest
+    container_name: house-dashboard-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - house-dashboard-network
+
+  graphql-api:
+    build:
+      context: ./be/packages/graphql-api
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/house_dashboard
+      - MQTT_HOST=mqtt://mqtt-broker:1883
+      - PORT=4000
+    depends_on:
+      - mongodb
+      - mqtt-broker
+    networks:
+      - house-dashboard-network
+
+# Add volume for MongoDB data
+volumes:
+  mongodb-data:

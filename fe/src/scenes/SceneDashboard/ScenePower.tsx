@@ -2,10 +2,10 @@ import { Box, Tab, Tabs, Typography, useTheme } from "@mui/material";
 import { tokens } from "../../theme";
 import { useState } from "react";
 import MeteoCard from "../../components/power/MeteoCard";
-import PowerConsumptionSection from "../../components/power/PowerConsumptionSection";
+
 import RoomDetailsList from "../../components/power/RoomDetailsList";
 import { mockRoomData } from "../../data/mockData"; // Move your mock data to a separate file
-import AmperageGaugeSection from "../../components/power/AmperageGaugeSection";
+import PowerConsumptionSection from "../../components/power/PowerConsumptionSection copy";
 
 const Power = () => {
   const theme = useTheme();
@@ -75,7 +75,6 @@ const Power = () => {
           {/* ROW 1 - Stats */}
           <MeteoCard />
           {/* ROW 2 - Gauge & Chart */}
-          <AmperageGaugeSection />
           <PowerConsumptionSection />
         </Box>
       ) : (

@@ -8,6 +8,7 @@ interface PowerUpdate {
   devices: Record<string, any>;
   totalPower: number;
   totalCurrent: number;
+  timestamp: Date
 }
 
 export function setupWebSocketServer(server: HttpServer): void {
