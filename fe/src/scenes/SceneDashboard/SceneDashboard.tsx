@@ -10,7 +10,6 @@ import SecurityIcon from '@mui/icons-material/Security';
 import TvIcon from '@mui/icons-material/Tv';
 import MeteoCard from "../../components/power/MeteoCard";
 import FullCalendarComponent from "../../components/calendar/FullCalendarComponent";
-import PowerConsumptionSection from "../../components/power/PowerBriefSection";
 import PowerBriefSection from "../../components/power/PowerBriefSection";
 
 const SceneDashboard = () => {
@@ -34,6 +33,7 @@ const SceneDashboard = () => {
   //     [device]: !prev[device]
   //   }));
   // };
+
   return (
     <Box sx={{ flexGrow: 1, m: 4 }}>
 
@@ -56,8 +56,11 @@ const SceneDashboard = () => {
 
       {/* DASHBOARD GRID */}
       <Box sx={{ flexGrow: 1 }}>
-        {/* METO */}
+       
+       
         <Grid container spacing={4}>
+
+           {/* METEO */}
           <Grid size={4}>
             <Paper
               elevation={3}

@@ -19,11 +19,20 @@ const brokerUrl = process.env.MQTT_HOST || '';
 const username = process.env.MQTT_USERNAME;
 const password = process.env.MQTT_PASSWORD;
 const topic = process.env.POWER_TOPIC || 'house-dashboard/power/shelly2pm';
+const alltopic = '#';
+// Connection options
+const mqttOptions: mqtt.IClientOptions = {
+  clientId: `power-service-${Math.random().toString(16).substring(2, 8)}`, // Random client ID
+  clean: true
+};
 
-const mqttClient = mqtt.connect(brokerUrl, {
-  username: username,
-  password: password
-});
+// Only add credentials if provided
+if (username && password) {
+  mqttOptions.username = username;
+  mqttOptions.password = password;
+}
+
+const mqttClient = mqtt.connect(brokerUrl, mqttOptions);
 
 // Function to calculate and broadcast totals
 export function updateTotalsAndBroadcast(): void {
@@ -48,7 +57,7 @@ export function connectMqtt(): void {
       if (err) {
         console.error('Error subscribing to power topics:', err);
       } else {
-        console.log('Subscribed to power topics');
+        console.log(`Subscribed to ${topic}`);
       }
     });
   });
@@ -95,14 +104,14 @@ export function connectMqtt(): void {
                 relayIndex: channel.relay
               }));
 
-              console.log(`Updated power reading for ${readingId}: ${channel.power}W`);
+              //console.log(`Updated power reading for ${readingId}: ${channel.power}W`);
             });
             
             // Save to MongoDB (bulk insert)
             try {
               if (readings.length > 0) {
                 await PowerReading.insertMany(readings);
-                console.log(`Saved ${readings.length} power readings to MongoDB`);
+                //console.log(`Saved ${readings.length} power readings to MongoDB`);
               }
             } catch (dbError) {
               console.error('Failed to save readings to MongoDB:', dbError);

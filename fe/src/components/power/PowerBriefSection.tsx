@@ -6,7 +6,7 @@ import PowerMeter from "./PowerMeter";
 import AmpMeter from "./AmpMeter";
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import ElectricMeterIcon from '@mui/icons-material/ElectricMeter';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import EuroIcon from '@mui/icons-material/Euro'; 
 
 // Contract maximum current in amperes
 const CONTRACT_MAX_AMPS = 30;
@@ -56,7 +56,7 @@ const PowerBriefSection: React.FC = () => {
               <PowerMeter value={stats.current.power} />
 
               <Box sx={{ mt: 2 }}>
-                <Typography variant="h4" color="primary">{formatWatts(stats.current.power)}</Typography>
+                <Typography variant="h4" color="textSecondary">{formatWatts(stats.current.power)}</Typography>
                 <Typography variant="body2" color="textSecondary">Power Consumption</Typography>
               </Box>
             </CardContent>
@@ -83,7 +83,6 @@ const PowerBriefSection: React.FC = () => {
               justifyContent: 'space-between'
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
-                <AttachMoneyIcon sx={{ color: theme.palette.success.main, mr: 1 }} />
                 <Typography variant="h6" color="textSecondary">
                   Current Cost this month
                 </Typography>
@@ -97,21 +96,21 @@ const PowerBriefSection: React.FC = () => {
                 height: '100px'
               }}>
                 <Typography variant="h3" color="success.main">
-                  ${estimatedCost.toFixed(2)}
+                  {estimatedCost.toFixed(2)} €
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                   <Typography variant="body2" color="textSecondary" sx={{ mr: 1 }}>
                     {formatKilowattHours(selectedPeriod === 'week' ? stats.current.week : stats.current.month)}
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
-                    at ${ELECTRICITY_COST_PER_KWH}/kWh
+                    at {ELECTRICITY_COST_PER_KWH}/kWh €
                   </Typography>
                 </Box>
               </Box>
 
               <Box sx={{ mt: 2 }}>
                 <Typography variant="body2" color="success.dark" sx={{ fontWeight: 'bold' }}>
-                  Today: ${(stats.current.today * ELECTRICITY_COST_PER_KWH).toFixed(2)}
+                  Today: {(stats.current.today * ELECTRICITY_COST_PER_KWH).toFixed(2)} €
                 </Typography>
               </Box>
             </CardContent>

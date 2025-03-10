@@ -5,9 +5,9 @@ import MeteoCard from "../../components/power/MeteoCard";
 
 import RoomDetailsList from "../../components/power/RoomDetailsList";
 import { mockRoomData } from "../../data/mockData"; // Move your mock data to a separate file
-import PowerConsumptionSection from "../../components/power/PowerConsumptionSection copy";
+import PowerConsumptionSection from "../../components/power/PowerConsumptionSection";
 
-const Power = () => {
+const ScenePower = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [activeTab, setActiveTab] = useState(0);
@@ -85,4 +85,4 @@ const Power = () => {
   );
 };
 
-export default Power;
+export default ScenePower;

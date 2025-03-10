@@ -9,7 +9,7 @@ import Topbar from "./components/layout/Topbar";
 import Sidebar from "./components/layout/Sidebar";
 
 // Scenes
-import Power from "./scenes/SceneDashboard/ScenePower";
+import ScenePower from "./scenes/SceneDashboard/ScenePower";
 import SceneDashboard from "./scenes/SceneDashboard/SceneDashboard";
 
 // Theme context
@@ -48,7 +48,7 @@ function App() {
               <div style={{ flex: 1, overflow: "auto" }}>
                 <Routes>
                   <Route path="/" element={<SceneDashboard />} />
-                  <Route path="/power" element={<Power />} />
+                  <Route path="/power" element={<ScenePower />} />
                   {/* Add more routes as needed */}
                 </Routes>
               </div>
