@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Device } from '../../../power-service/src/models/Device';
 
 const POWER_SERVICE_URL = process.env.POWER_SERVICE_URL || 'http://localhost:3001';
 

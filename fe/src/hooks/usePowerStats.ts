@@ -1,5 +1,20 @@
 import { useState, useEffect } from 'react';
 import usePowerData from './usePowerData';
+import { POWER_STATS_QUERY } from '../graphql/queries/queries';
+
+// Define a mapping from UI timeRange to API period
+export const timeRangeToApiPeriod = {
+  'day': '24h',
+  'week': 'week',
+  'month': 'month'
+} as const;
+
+// Define a mapping from API period to display text
+export const periodToDisplayText = {
+  '24h': 'Last 24 Hours',
+  'week': 'This Week',
+  'month': 'This Month'
+} as const;
 
 export interface PowerStats {
   current: {
@@ -19,34 +34,6 @@ export interface PowerStats {
 
 // GraphQL endpoint
 const GRAPHQL_ENDPOINT = process.env.REACT_APP_GRAPHQL_ENDPOINT || 'http://localhost:4000/graphql';
-
-// GraphQL queries
-const POWER_STATS_QUERY = `
-  query GetPowerStats($period: String!) {
-    powerStats(period: $period) {
-      current {
-        power
-        today
-        week
-        month
-      }
-      history {
-        hourly {
-          timestamp
-          value
-        }
-        daily {
-          timestamp
-          value
-        }
-        monthly {
-          timestamp
-          value
-        }
-      }
-    }
-  }
-`;
 
 // Keep your existing sample data generation for fallback
 const generateSampleData = (period: string) => {
@@ -85,12 +72,16 @@ const generateSampleData = (period: string) => {
   return data;
 };
 
-const usePowerStats = () => {
+interface UsePowerStatsProps {
+  timeRange?: 'day' | 'week' | 'month'; // Optional prop to control period externally
+}
+
+const usePowerStats = ({ timeRange }: UsePowerStatsProps = {}) => {
   const { powerData, isConnected } = usePowerData();
   const [stats, setStats] = useState<PowerStats>({
     current: {
       power: 0,
-      current: 0, // Add current property
+      current: 0,
       today: 0,
       week: 0,
       month: 0,
@@ -102,10 +93,19 @@ const usePowerStats = () => {
     },
     loading: true
   });
-  
-  const [selectedPeriod, setSelectedPeriod] = useState<'24h' | 'week' | 'month'>('24h');
+
+  // If timeRange is provided, use it to determine selectedPeriod
+  const initialPeriod = timeRange ? timeRangeToApiPeriod[timeRange] : '24h';
+  const [selectedPeriod, setSelectedPeriod] = useState<'24h' | 'week' | 'month'>(initialPeriod);
   const [error, setError] = useState<string | null>(null);
-  
+
+  // Update selectedPeriod when timeRange prop changes
+  useEffect(() => {
+    if (timeRange) {
+      setSelectedPeriod(timeRangeToApiPeriod[timeRange]);
+    }
+  }, [timeRange]);
+
   // Update current power from WebSocket when available
   useEffect(() => {
     if (powerData) {
@@ -114,18 +114,18 @@ const usePowerStats = () => {
         current: {
           ...prev.current,
           power: powerData.totalPower || 0,
-          current: powerData.totalCurrent || 0 // Add current from websocket data
+          current: powerData.totalCurrent || 0
         },
         loading: false
       }));
     }
   }, [powerData]);
-  
+
   // Fetch historical data from GraphQL API
   useEffect(() => {
     const fetchPowerStats = async () => {
       setStats(prev => ({ ...prev, loading: true }));
-      
+
       try {
         // GraphQL request
         const response = await fetch(GRAPHQL_ENDPOINT, {
@@ -138,88 +138,124 @@ const usePowerStats = () => {
             variables: { period: selectedPeriod },
           }),
         });
-        
+
         const result = await response.json();
-        
+
+        // Debug the raw response
+        console.log('GraphQL response:', JSON.stringify(result));
+
         if (result.errors) {
+          console.error('GraphQL errors:', result.errors);
           throw new Error(result.errors[0].message);
         }
-        
-        // Format the time series data from GraphQL
-        const formatTimeSeriesData = (timeSeries: { timestamp: string, value: number }[]): [string, number][] => {
-          return timeSeries.map(point => [point.timestamp, point.value]);
-        };
-        
-        setStats({
+
+        // Create default values for missing data
+        const defaultData = {
           current: {
-            // Use real-time power from WebSocket if available, otherwise from GraphQL
-            power: powerData?.totalPower ?? result.data.powerStats.current.power,
-            current: powerData?.totalCurrent ?? 0, // Add current property
-            today: result.data.powerStats.current.today,
-            week: result.data.powerStats.current.week,
-            month: result.data.powerStats.current.month,
+            power: 0,
+            current: 0,
+            today: 0,
+            week: 0,
+            month: 0,
           },
           history: {
-            hourly: formatTimeSeriesData(result.data.powerStats.history.hourly || []),
-            daily: formatTimeSeriesData(result.data.powerStats.history.daily || []),
-            monthly: formatTimeSeriesData(result.data.powerStats.history.monthly || []),
+            hourly: [],
+            daily: [],
+            monthly: []
+          }
+        };
+
+        // Safely extract data with fallbacks
+        const powerStats = result.data?.powerStats || defaultData;
+
+        // Format the time series data safely
+        const formatTimeSeriesData = (timeSeries: any[]): [string, number][] => {
+          if (!Array.isArray(timeSeries)) return [];
+          return timeSeries.map(point => [
+            point?.timestamp || new Date().toISOString(),
+            typeof point?.value === 'number' ? point.value : 0
+          ]);
+        };
+
+        // Set state with complete data structure and fallbacks at every level
+        setStats({
+          current: {
+            power: powerData?.totalPower ?? powerStats.current?.power ?? 0,
+            current: powerData?.totalCurrent ?? powerStats.current?.current ?? 0,
+            today: powerStats.current?.today ?? 0,
+            week: powerStats.current?.week ?? 0,
+            month: powerStats.current?.month ?? 0,
+          },
+          history: {
+            hourly: formatTimeSeriesData(powerStats.history?.hourly || []),
+            daily: formatTimeSeriesData(powerStats.history?.daily || []),
+            monthly: formatTimeSeriesData(powerStats.history?.monthly || []),
           },
           loading: false
         });
-        
+
         setError(null);
       } catch (err) {
         console.error('Error fetching power stats:', err);
-        setError('Failed to fetch power data from GraphQL API');
-        
-        // Fallback to sample data generation
-        const sampleData = generateSampleData(selectedPeriod);
-        
-        // Calculate kWh totals from sample data
-        let todayKwh = 0;
-        let weekKwh = 0;
-        let monthKwh = 0;
-        
-        if (selectedPeriod === '24h') {
-          todayKwh = sampleData.reduce((sum, [_, value]) => sum + value, 0) / 1000;
-          weekKwh = todayKwh * 7;
-          monthKwh = todayKwh * 30;
-        } else if (selectedPeriod === 'week') {
-          weekKwh = sampleData.reduce((sum, [_, value]) => sum + value, 0);
-          todayKwh = weekKwh / 7;
-          monthKwh = weekKwh * (30/7);
-        } else if (selectedPeriod === 'month') {
-          monthKwh = sampleData.reduce((sum, [_, value]) => sum + value, 0);
-          todayKwh = monthKwh / 30;
-          weekKwh = monthKwh * (7/30);
-        }
-        
+        setError(`Failed to fetch power data: ${err instanceof Error ? err.message : 'Unknown error'}`);
+
+        // Use placeholder data on error
         setStats(prev => ({
           ...prev,
           current: {
-            ...prev.current,
-            today: parseFloat(todayKwh.toFixed(1)),
-            week: parseFloat(weekKwh.toFixed(1)),
-            month: parseFloat(monthKwh.toFixed(1))
+            power: powerData?.totalPower ?? 0,
+            current: powerData?.totalCurrent ?? 0,
+            today: 0,
+            week: 0,
+            month: 0,
           },
           history: {
-            ...prev.history,
-            [selectedPeriod === '24h' ? 'hourly' : 
-              selectedPeriod === 'week' ? 'daily' : 'monthly']: sampleData
+            hourly: generateSampleData('24h'),
+            daily: generateSampleData('week'),
+            monthly: generateSampleData('month'),
           },
           loading: false
         }));
       }
     };
-    
+
     fetchPowerStats();
-    
+
     // Refresh data periodically (every 5 minutes)
     const intervalId = setInterval(fetchPowerStats, 5 * 60 * 1000);
     return () => clearInterval(intervalId);
   }, [selectedPeriod, powerData?.totalPower, powerData?.totalCurrent]);
-  
-  return { stats, selectedPeriod, setSelectedPeriod, error };
+
+  // Helper to get current total based on selected timeRange
+  const getTotalForTimeRange = (range: 'day' | 'week' | 'month') => {
+    if (range === 'day') return stats.current.today;
+    if (range === 'week') return stats.current.week;
+    return stats.current.month;
+  };
+
+  // Helper to get appropriate time series data for the selected period
+  const getHistoryForTimeRange = (range: 'day' | 'week' | 'month') => {
+    if (range === 'day') return stats.history.hourly;
+    if (range === 'week') return stats.history.daily;
+    return stats.history.monthly;
+  };
+
+  // Helper to handle period changes from UI timeRange values
+  const handleTimeRangeChange = (newTimeRange: 'day' | 'week' | 'month') => {
+    setSelectedPeriod(timeRangeToApiPeriod[newTimeRange]);
+  };
+
+  return {
+    stats,
+    timeRange: selectedPeriod === '24h' ? 'day' : selectedPeriod as 'week' | 'month',
+    setTimeRange: handleTimeRangeChange,
+    isLoading: stats.loading,
+    error,
+    selectedPeriod,
+    setSelectedPeriod,
+    getTotalForTimeRange,
+    getHistoryForTimeRange
+  };
 };
 
 export default usePowerStats;

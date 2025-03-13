@@ -6,7 +6,6 @@ import PowerMeter from "./PowerMeter";
 import AmpMeter from "./AmpMeter";
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import ElectricMeterIcon from '@mui/icons-material/ElectricMeter';
-import EuroIcon from '@mui/icons-material/Euro'; 
 
 // Contract maximum current in amperes
 const CONTRACT_MAX_AMPS = 30;
@@ -28,7 +27,6 @@ const PowerBriefSection: React.FC = () => {
   return (
     <Box sx={{ width: '150%' }}>
       <Grid container rowSpacing={2} columnSpacing={2}>
-
         {/* Current Power Card */}
         <Grid size={6}>
           <Card sx={{

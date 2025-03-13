@@ -8,9 +8,8 @@ import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { typeDefs } from './schema/typeDefs';
-import { powerResolvers } from './resolvers/powerResolvers';
 import path from 'path';
-
+import { resolvers } from './resolvers/powerResolvers';
 
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
@@ -35,7 +34,7 @@ async function startServer() {
   // Apollo Server setup
   const server = new ApolloServer({
     typeDefs,
-    resolvers: powerResolvers,
+    resolvers: resolvers,
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
     introspection: true,
   });
@@ -50,7 +49,6 @@ async function startServer() {
     bodyParser.json(),
     expressMiddleware(server),
   );
-
   // Start server
   const PORT = process.env.GRAPHQL_PORT || 4000;
   await new Promise<void>((resolve) => httpServer.listen({ port: PORT }, resolve));

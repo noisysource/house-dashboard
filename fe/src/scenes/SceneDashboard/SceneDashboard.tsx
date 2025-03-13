@@ -56,11 +56,9 @@ const SceneDashboard = () => {
 
       {/* DASHBOARD GRID */}
       <Box sx={{ flexGrow: 1 }}>
-       
-       
         <Grid container spacing={4}>
 
-           {/* METEO */}
+          {/* METEO */}
           <Grid size={4}>
             <Paper
               elevation={3}

@@ -3,12 +3,12 @@
     "target": "es2020",
     "module": "commonjs",
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "../",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../power-service/src/models/Room.ts", "../power-service/src/models/Device.ts"],
   "exclude": ["node_modules", "**/*.test.ts"]
 }

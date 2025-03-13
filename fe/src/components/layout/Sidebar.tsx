@@ -4,12 +4,12 @@ import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import { Link } from "react-router-dom";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
-import ContactsOutlinedIcon from "@mui/icons-material/ContactsOutlined";
 import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined";
-import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
+import MeetingRoomIcon from "@mui/icons-material/MeetingRoom";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import HomeWorkIcon from "@mui/icons-material/HomeWork"; 
+import DevicesIcon from '@mui/icons-material/Devices';
 
 const Item = ({ title, to, icon, selected, setSelected }: any) => {
   const theme = useTheme();
@@ -120,9 +120,16 @@ const Sidebar = () => {
               setSelected={setSelected}
             />
             <Item
-              title="Devices"
-              to="/contacts"
-              icon={<ContactsOutlinedIcon />}
+              title="Rooms"
+              to="/room"
+              icon={<MeetingRoomIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
+              title= "Devices"
+              to="/devices"
+              icon= {<DevicesIcon />}
               selected={selected}
               setSelected={setSelected}
             />

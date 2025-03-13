@@ -11,6 +11,8 @@ import Sidebar from "./components/layout/Sidebar";
 // Scenes
 import ScenePower from "./scenes/SceneDashboard/ScenePower";
 import SceneDashboard from "./scenes/SceneDashboard/SceneDashboard";
+import SceneRoom from "./scenes/SceneRoom/SceneRoom";
+import SceneDevices from "./scenes/SceneDevices";
 
 // Theme context
 export const ColorModeContext = createContext({
@@ -49,6 +51,8 @@ function App() {
                 <Routes>
                   <Route path="/" element={<SceneDashboard />} />
                   <Route path="/power" element={<ScenePower />} />
+                  <Route path="/room" element={<SceneRoom />} />
+                  <Route path="/devices" element={<SceneDevices />} />
                   {/* Add more routes as needed */}
                 </Routes>
               </div>
