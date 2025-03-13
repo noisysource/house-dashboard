@@ -37,7 +37,7 @@ export const typeDefs = gql`
 
   # Room types
   type Room {
-    id: ID!
+    id: ID
     name: String!
     power: RoomPower!
     current: RoomCurrent!
@@ -58,7 +58,7 @@ export const typeDefs = gql`
 
   # Device type
   type Device {
-    id: ID!
+    id: ID
     name: String!
     ip: String!
     type: String!

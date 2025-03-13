@@ -6,8 +6,9 @@ import cors from 'cors';
 import { setupWebSocketServer } from './services/websocket-service';
 import { connectMqtt } from './services/mqtt-service';
 import powerRoutes from './routes/power-routes';
+import roomsRoutes from './routes/room-routes';
+import deviceRoutes from './routes/device-routes';
 import mongoose from 'mongoose';
-import { Device } from './models/Device';
 
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
@@ -32,6 +33,8 @@ app.use(express.json());
 
 // API routes
 app.use('/api/power', powerRoutes);
+app.use('/api/rooms', roomsRoutes);
+app.use('/api/devices', deviceRoutes);
 
 // Health check endpoint
 app.get('/health', (req: any, res: any) => {
@@ -46,38 +49,6 @@ setupWebSocketServer(server);
 
 // Connect to MQTT broker
 connectMqtt();
-
-async function seedDevices() {
-    const devices = [
-      {
-        name: "Kitchen Refrigerator",
-        ip: "192.168.1.102",
-        type: "shelly",
-        location: "Kitchen",
-        active: true
-      },
-      {
-        name: "Office Computer",
-        ip: "192.168.1.103",
-        type: "shelly",
-        location: "Office",
-        active: true
-      }
-    ];
-    
-    try {
-      const count = await Device.countDocuments();
-      if (count === 0) {
-        console.log('Seeding sample devices...');
-        await Device.insertMany(devices);
-        console.log('Sample devices created successfully');
-      }
-    } catch (error) {
-      console.error('Error seeding devices:', error);
-    }
-  }
-
-  seedDevices();
 
 // Start server
 const PORT = process.env.POWER_SERVICE_PORT || 3001;

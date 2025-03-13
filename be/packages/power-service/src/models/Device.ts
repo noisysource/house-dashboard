@@ -24,7 +24,7 @@ const DeviceSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['shelly', 'smart_meter', 'other']
+    enum: ['TV', 'smart_meter', 'other']
   },
   location: {
     type: String
@@ -39,7 +39,15 @@ const DeviceSchema = new mongoose.Schema({
     required: false
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: {
+    transform: (doc, ret) => {
+      ret.id = ret._id.toString();
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    }
+  }
 });
 
 export const Device = mongoose.model('Device', DeviceSchema);

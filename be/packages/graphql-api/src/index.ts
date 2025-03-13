@@ -9,7 +9,9 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { typeDefs } from './schema/typeDefs';
 import path from 'path';
-import { resolvers } from './resolvers/powerResolvers';
+import { powerResolvers } from './resolvers/powerResolvers';
+import { deviceResolvers } from './resolvers/deviceResolvers';
+import { roomResolvers } from './resolvers/roomResolvers';
 
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
@@ -30,6 +32,18 @@ async function startServer() {
   // Express app setup
   const app = express();
   const httpServer = http.createServer(app);
+
+  const resolvers = {
+    Query: {
+      ...powerResolvers.Query,
+      ...deviceResolvers.Query,
+      ...roomResolvers.Query
+    },
+    Mutation: {
+      ...roomResolvers.Mutation,
+      ...deviceResolvers.Mutation
+    }
+  }
 
   // Apollo Server setup
   const server = new ApolloServer({
