@@ -6,9 +6,11 @@ export const typeDefs = gql`
     id: ID!
     timestamp: String!
     power: Float!
-    deviceId: String
+    deviceId: ID
     deviceName: String
-    roomId: String
+    roomId: ID
+    device: Device
+    room: Room
   }
 
   type PowerStats {
@@ -37,11 +39,11 @@ export const typeDefs = gql`
 
   # Room types
   type Room {
-    id: ID
+    id: ID!
     name: String!
     power: RoomPower!
     current: RoomCurrent!
-    devices: [String]
+    devices: String
   }
 
   type RoomPower {
@@ -58,13 +60,14 @@ export const typeDefs = gql`
 
   # Device type
   type Device {
-    id: ID
+    id: ID!
     name: String!
     ip: String!
     type: String!
     location: String
     active: Boolean!
     roomId: ID
+    room: Room  # Added to allow direct access to the related room
   }
 
   # Input types
@@ -75,7 +78,7 @@ export const typeDefs = gql`
 
   input RoomInput {
     name: String!
-    devices: [String]
+    devices: [ID]  # Changed from [String] to [ID] for consistency
   }
 
   input DeviceInput {
@@ -84,6 +87,7 @@ export const typeDefs = gql`
     type: String!
     location: String
     active: Boolean
+    roomId: ID  # Added to allow setting roomId when creating a device
   }
 
   # Queries
@@ -100,6 +104,7 @@ export const typeDefs = gql`
     # Device queries
     devices: [Device!]!
     device(id: ID!): Device
+    devicesByRoom(roomId: ID!): [Device!]!  # Added for convenience
   }
 
   # Mutations
@@ -113,6 +118,6 @@ export const typeDefs = gql`
     createDevice(input: DeviceInput!): Device!
     updateDevice(id: ID!, input: DeviceInput!): Device!
     deleteDevice(id: ID!): Boolean!
-    assignDeviceToRoom(deviceId: ID!, roomId: ID!): Device!
+    assignDeviceToRoom(deviceId: ID!, roomId: ID): Device!  # Made roomId nullable to support unassigning
   }
 `;

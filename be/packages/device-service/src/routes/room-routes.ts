@@ -1,13 +1,14 @@
 import express from 'express';
 import { Room } from '../models/Room'
-import { Device } from '../models/Device';
+import { Device } from '../models/Device'
+
 
 const router = express.Router();
 
 // Get all rooms
 router.get('/', async (req, res) => {
   try {
-    const rooms = await Room.find().lean();
+    const rooms = await Room.find()
     res.json(rooms);
   } catch (error) {
     console.error('Error fetching rooms:', error);

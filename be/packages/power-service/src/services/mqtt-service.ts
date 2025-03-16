@@ -53,7 +53,7 @@ export function connectMqtt(): void {
     console.log('Connected to MQTT broker');
     
     // Subscribe to power topics
-    mqttClient.subscribe(topic, (err) => {
+    mqttClient.subscribe(alltopic, (err) => {
       if (err) {
         console.error('Error subscribing to power topics:', err);
       } else {
@@ -66,6 +66,7 @@ export function connectMqtt(): void {
   mqttClient.on('message', async (topic, message) => {
     // Log all messages for debugging
     console.log(`MQTT Message: Topic=${topic}`);
+    const data2 = JSON.parse(message.toString());
 
     try {
       // Handle custom topic from Shelly script

@@ -1,6 +1,6 @@
 import express from 'express';
-import { Room } from '../models/Room'
 import { Device } from '../models/Device';
+import { Room } from '../models/Room';
 
 const router = express.Router();
 
@@ -38,7 +38,7 @@ router.put('/:id/assign', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     // Fetch all devices from your database
-    const devices = await Device.find().lean();
+    const devices = await Device.find()
     res.json(devices || []);
   } catch (error) {
     console.error('Error fetching devices:', error);

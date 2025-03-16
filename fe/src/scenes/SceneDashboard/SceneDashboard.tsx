@@ -11,6 +11,7 @@ import TvIcon from '@mui/icons-material/Tv';
 import MeteoCard from "../../components/power/MeteoCard";
 import FullCalendarComponent from "../../components/calendar/FullCalendarComponent";
 import PowerBriefSection from "../../components/power/PowerBriefSection";
+import axios from "axios";
 
 const SceneDashboard = () => {
   const theme = useTheme();
@@ -26,13 +27,14 @@ const SceneDashboard = () => {
     tvSystem: false,
   });
 
-  // Toggle device state
-  // const toggleDevice = (device: string) => {
-  //   setDeviceStates(prev => ({
-  //     ...prev,
-  //     [device]: !prev[device]
-  //   }));
-  // };
+  //Toggle device state
+  const toggleDevice = (device: string) => {
+    console.log(`Toggling device: ${device}`);
+    
+    const resp = axios.get(`http://192.168.0.100/rpc/Switch.Set?id=1&on=false`);
+    console.log('here');
+    
+  };
 
   return (
     <Box sx={{ flexGrow: 1, m: 4 }}>
@@ -157,7 +159,7 @@ const SceneDashboard = () => {
                     variant="contained"
                     fullWidth
                     startIcon={<NightsStayIcon />}
-                    // onClick={() => toggleDevice('bedroomLights')}
+                    onClick={() => toggleDevice('bedroomLights')}
                     sx={{
                       p: 2,
                       backgroundColor: deviceStates.bedroomLights ? colors.greenAccent[500] : colors.grey[700],

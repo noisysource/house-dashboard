@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import {
   Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem,
-  Card, CardContent, Typography, IconButton, Grid, List, ListItem, ListItemText,
-  ListItemSecondaryAction, Switch, useTheme
+  Card, CardContent, Typography, IconButton, Grid, Switch, useTheme
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { tokens } from '../theme';
@@ -12,14 +11,6 @@ import { CREATE_DEVICE, UPDATE_DEVICE, DELETE_DEVICE, GET_DEVICES } from '../gra
 
 // Device types
 const deviceTypes = [
-  'Smart Plug',
-  'Light Bulb',
-  'Thermostat',
-  'TV',
-  'Computer',
-  'Refrigerator',
-  'Washing Machine',
-  'Air Conditioner',
   'Other'
 ];
 
