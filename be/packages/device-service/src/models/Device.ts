@@ -6,9 +6,9 @@ export interface IDevice extends Document {
   type: string;
   location: string;
   active: boolean;
-  roomId?: string; // Add this field
-  createdAt: Date;
-  updatedAt: Date;
+  roomId?: string;
+  channel: number;
+  topic: string;
 }
 
 const DeviceSchema = new mongoose.Schema({
@@ -32,10 +32,18 @@ const DeviceSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  roomId: { // Add this field
+  roomId: {
     type: Schema.Types.ObjectId,
     ref: 'Room',
     required: false
+  },
+  channel: {
+    type: Number,
+    required: true
+  },
+  topic: {
+    type: String,
+    required: true
   }
 }, {
   timestamps: true,

@@ -65,9 +65,13 @@ export const typeDefs = gql`
     ip: String!
     type: String!
     location: String
+    channel: String
+    topic: String
     active: Boolean!
     roomId: ID
-    room: Room  # Added to allow direct access to the related room
+    room: Room 
+    createdAt: String!
+    updatedAt: String!
   }
 
   # Input types
@@ -87,7 +91,9 @@ export const typeDefs = gql`
     type: String!
     location: String
     active: Boolean
-    roomId: ID  # Added to allow setting roomId when creating a device
+    roomId: ID  
+    channel: String
+    topic: String
   }
 
   # Queries

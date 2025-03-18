@@ -1,4 +1,7 @@
+import { IRoom } from "../models/Room";
+
 // Update your mockPieData to reflect rooms
+
 export const mockPieData = [
   {
     id: "living room",
@@ -59,45 +62,4 @@ export const mockBarData = [
     "consumption": 2.4,
     "consumptionColor": "hsl(190, 70%, 50%)",
   }
-];
-
-
-// src/data/mockData.ts
-export interface Device {
-  deviceId: string;
-  name: string;
-  status: string;
-  amperage: number;
-  kilowatts: number;
-  time: string;
-}
-
-
-export interface Room {
-  roomId: string;
-  roomName: string;
-  totalAmperage: number;
-  totalKw: number;
-  devices: Device[];
-}
-
-export const mockRoomData: Room[] = [
-  {
-    roomId: "LR",
-    roomName: "Living Room",
-    totalAmperage: 6.8,
-    totalKw: 1.53,
-    devices: [
-      {
-        deviceId: "LR-001",
-        name: "Main Lights",
-        status: "active",
-        amperage: 1.2,
-        kilowatts: 0.27,
-        time: "2h 15m",
-      },
-      // ... other devices
-    ]
-  },
-  // ... other rooms
 ];

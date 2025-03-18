@@ -48,7 +48,7 @@ router.get('/', async (req, res) => {
 
 // Create device
 router.post('/', async (req, res) => {
-  const { name, ip, type, location, active } = req.body;
+  const { name, ip, type, location, active, topic, channel } = req.body;
   
   if (!name || !ip || !type) {
     return res.status(400).json({ error: 'Name, IP, and type are required' });
@@ -62,7 +62,9 @@ router.post('/', async (req, res) => {
       ip, 
       type,
       location: location || '',
-      active: active !== undefined ? active : true
+      active: active !== undefined ? active : true,
+      channel,
+      topic
     });
     
     const savedDevice = await device.save();

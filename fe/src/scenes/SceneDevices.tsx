@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem,
+  Box, Button,
   Card, CardContent, Typography, IconButton, Grid, Switch, useTheme
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
@@ -8,25 +8,16 @@ import { tokens } from '../theme';
 import Header from '../components/common/Header';
 import { useQuery, useMutation } from '@apollo/client';
 import { CREATE_DEVICE, UPDATE_DEVICE, DELETE_DEVICE, GET_DEVICES } from '../graphql/queries/queries';
-
-// Device types
-const deviceTypes = [
-  'Other'
-];
+import DeviceDialog from '../components/device/CreateEditDeviceDialog';
+import { IDevice } from '../models/Device';
+import { channel } from 'diagnostics_channel';
 
 const SceneDevices = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState('create');
-  const [currentDevice, setCurrentDevice] = useState({
-    id: '',
-    name: '',
-    ip: '',
-    type: 'Smart Plug',
-    location: '',
-    active: true
-  });
+  const [currentDevice, setCurrentDevice] = useState<IDevice | null>();
   const [error, setError] = useState<string | null>(null);
 
   // GraphQL queries and mutations
@@ -54,7 +45,7 @@ const SceneDevices = () => {
   });
 
   // Handle dialog open for create/edit
-  const handleOpenDialog = (mode: React.SetStateAction<string>, device = { id: '', name: '', ip: '', type: 'Smart Plug', location: '', active: true }) => {
+  const handleOpenDialog = (mode: React.SetStateAction<string>, device: IDevice) => {
     setDialogMode(mode);
     setCurrentDevice(device);
     setError(null);
@@ -72,14 +63,14 @@ const SceneDevices = () => {
     setCurrentDevice(prev => ({
       ...prev,
       [name]: name === 'active' ? checked : value
-    }));
+    } as IDevice));
   };
 
   // Save device (create or update)
   const handleSaveDevice = async () => {
     try {
       // Validate form
-      if (!currentDevice.name) {
+      if (!currentDevice || !currentDevice.name) {
         setError('Device name is required');
         return;
       }
@@ -94,7 +85,9 @@ const SceneDevices = () => {
         ip: currentDevice.ip,
         type: currentDevice.type,
         location: currentDevice.location,
-        active: currentDevice.active
+        active: currentDevice.active,
+        channel: currentDevice.channel,
+        topic: currentDevice.topic
       };
 
       if (dialogMode === 'create') {
@@ -153,7 +146,7 @@ const SceneDevices = () => {
           variant="contained"
           color="secondary"
           startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog('create')}
+          onClick={() => handleOpenDialog('create', currentDevice || {} as IDevice)}
         >
           Add New Device
         </Button>
@@ -244,7 +237,7 @@ const SceneDevices = () => {
                   variant="contained"
                   color="secondary"
                   startIcon={<AddIcon />}
-                  onClick={() => handleOpenDialog('create')}
+                  onClick={() => handleOpenDialog('create', currentDevice || {} as IDevice)}
                 >
                   Add New Device
                 </Button>
@@ -255,81 +248,15 @@ const SceneDevices = () => {
       </Grid>
 
       {/* Dialog for creating/editing devices */}
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>
-          {dialogMode === 'create' ? 'Add New Device' : 'Edit Device'}
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            name="name"
-            label="Device Name"
-            type="text"
-            fullWidth
-            value={currentDevice.name}
-            onChange={handleChange}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="dense"
-            name="ip"
-            label="IP Address"
-            type="text"
-            fullWidth
-            value={currentDevice.ip}
-            onChange={handleChange}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="dense"
-            name="type"
-            label="Device Type"
-            select
-            fullWidth
-            value={currentDevice.type}
-            onChange={handleChange}
-            sx={{ mb: 2 }}
-          >
-            {deviceTypes.map((option) => (
-              <MenuItem key={option} value={option}>
-                {option}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            margin="dense"
-            name="location"
-            label="Location (optional)"
-            type="text"
-            fullWidth
-            value={currentDevice.location}
-            onChange={handleChange}
-            sx={{ mb: 2 }}
-          />
-          <Box display="flex" alignItems="center">
-            <Typography>Active: </Typography>
-            <Switch
-              name="active"
-              checked={currentDevice.active}
-              onChange={handleChange}
-              color="secondary"
-            />
-          </Box>
-
-          {error && (
-            <Typography color="error" variant="body2" sx={{ mt: 2 }}>
-              {error}
-            </Typography>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSaveDevice} variant="contained" color="secondary">
-            {dialogMode === 'create' ? 'Create' : 'Update'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <DeviceDialog
+        open={openDialog}
+        mode={dialogMode}
+        device={currentDevice || undefined}
+        onClose={handleCloseDialog}
+        onSave={handleSaveDevice}
+        onChange={handleChange}
+        error={error}
+      />
     </Box>
   );
 };

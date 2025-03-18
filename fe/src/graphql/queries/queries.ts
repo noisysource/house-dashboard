@@ -127,6 +127,8 @@ export const CREATE_DEVICE = gql`
       type
       location
       active
+      channel
+      topic
     }
   }
 `;
@@ -141,6 +143,8 @@ export const UPDATE_DEVICE = gql`
       location
       active
       roomId
+      channel
+      topic
     }
   }
 `;
