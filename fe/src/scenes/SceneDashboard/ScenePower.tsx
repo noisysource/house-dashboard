@@ -11,7 +11,7 @@ import SingleBedIcon from '@mui/icons-material/SingleBed';
 import ShowerIcon from '@mui/icons-material/Shower';
 import LaptopIcon from '@mui/icons-material/Laptop';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import usePowerStats from "../../hooks/usePowerStats";
+import usePowerReadings from "../../hooks/usePowerReadings";
 import RoomConsumptionGraph from "../../components/power/RoomConsumptionGraph";
 import useRoomPowerData from "../../hooks/useRoomPowerData";
 
@@ -47,7 +47,7 @@ const ScenePower = () => {
     isLoading: statsLoading,
     error: statsError,
     getTotalForTimeRange
-  } = usePowerStats({ timeRange });
+  } = usePowerReadings({ timeRange });
 
   const {
     roomData: apiRoomData,

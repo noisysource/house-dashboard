@@ -1,21 +1,21 @@
 import { Box, Card, CardContent, FormControl, Grid, MenuItem, Select, SelectChangeEvent, Typography, Divider } from "@mui/material";
 import LineChart from "./LineChart";
-import usePowerStats from "../../hooks/usePowerStats";
+import usePowerReadings from "../../hooks/usePowerReadings";
 import { formatWatts, formatKilowattHours, formatAmps } from "../../utils/formatters";
 import PowerMeter from "./PowerMeter";
 import AmpMeter from "./AmpMeter";
 
 // Contract maximum current in amperes - adjust this based on your specific contract
-const CONTRACT_MAX_AMPS = 30; 
+const CONTRACT_MAX_AMPS = 30;
 
 const PowerConsumptionSection: React.FC = () => {
-  const { stats, selectedPeriod, setSelectedPeriod, error } = usePowerStats();
-  
+  const { stats, selectedPeriod, setSelectedPeriod, error } = usePowerReadings();
+
   // Handle period change
   const handlePeriodChange = (event: SelectChangeEvent<string>) => {
     setSelectedPeriod(event.target.value as '24h' | 'week' | 'month');
   };
-  
+
   // Get the appropriate dataset based on selected period
   const getChartData = () => {
     if (selectedPeriod === '24h') {
@@ -26,7 +26,7 @@ const PowerConsumptionSection: React.FC = () => {
       return stats.history.monthly;
     }
   };
-  
+
   const getChartTitle = () => {
     switch (selectedPeriod) {
       case '24h':
@@ -39,11 +39,11 @@ const PowerConsumptionSection: React.FC = () => {
         return 'Power Consumption';
     }
   };
-  
+
   const getChartUnit = () => {
     return selectedPeriod === '24h' ? 'W' : 'kWh';
   };
-  
+
   return (
     <Grid container spacing={3}>
       {/* Current Power Card */}
@@ -59,14 +59,14 @@ const PowerConsumptionSection: React.FC = () => {
           </CardContent>
         </Card>
       </Grid>
-      
+
       {/* Current Load Card */}
       <Grid item xs={12} md={4}>
         <Card>
           <CardContent sx={{ textAlign: 'center', py: 2 }}>
             <Typography variant="h6" color="textSecondary">Circuit Load</Typography>
-            <AmpMeter 
-              value={stats.current.current} 
+            <AmpMeter
+              value={stats.current.current}
               contractMax={CONTRACT_MAX_AMPS}
               warningThreshold={60}
               dangerThreshold={80}
@@ -77,7 +77,7 @@ const PowerConsumptionSection: React.FC = () => {
                 of {CONTRACT_MAX_AMPS}A Maximum
               </Typography>
             </Box>
-            
+
             {/* Add percentage of max */}
             <Box sx={{ mt: 1 }}>
               <Typography variant="body1" color="text.secondary">
@@ -87,7 +87,7 @@ const PowerConsumptionSection: React.FC = () => {
           </CardContent>
         </Card>
       </Grid>
-      
+
       {/* Daily Usage Card */}
       <Grid item xs={12} md={4}>
         <Card>
@@ -100,7 +100,7 @@ const PowerConsumptionSection: React.FC = () => {
           </CardContent>
         </Card>
       </Grid>
-      
+
       {/* Weekly/Monthly Card */}
       <Grid item xs={12} md={6}>
         <Card>
@@ -117,7 +117,7 @@ const PowerConsumptionSection: React.FC = () => {
           </CardContent>
         </Card>
       </Grid>
-      
+
       {/* Estimated Cost Card - Optional */}
       <Grid item xs={12} md={6}>
         <Card>
@@ -127,8 +127,8 @@ const PowerConsumptionSection: React.FC = () => {
             </Typography>
             <Box sx={{ height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Typography variant="h3">
-                {selectedPeriod === 'week' 
-                  ? `$${(stats.current.week * 0.15).toFixed(2)}` 
+                {selectedPeriod === 'week'
+                  ? `$${(stats.current.week * 0.15).toFixed(2)}`
                   : `$${(stats.current.month * 0.15).toFixed(2)}`
                 }
               </Typography>
@@ -137,7 +137,7 @@ const PowerConsumptionSection: React.FC = () => {
           </CardContent>
         </Card>
       </Grid>
-      
+
       {/* Chart */}
       <Grid item xs={12}>
         <Card>
@@ -155,20 +155,20 @@ const PowerConsumptionSection: React.FC = () => {
                 </Select>
               </FormControl>
             </Box>
-            
+
             {error && (
               <Typography color="error" sx={{ mb: 2 }}>
                 {error} (showing sample data)
               </Typography>
             )}
-            
+
             <Box sx={{ height: 300 }}>
               {stats.loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                   <Typography>Loading data...</Typography>
                 </Box>
               ) : (
-                <LineChart 
+                <LineChart
                   data={getChartData()}
                   yAxisLabel={getChartUnit()}
                 />

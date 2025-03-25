@@ -1,5 +1,3 @@
-import { IRoom } from "../models/Room";
-
 // Update your mockPieData to reflect rooms
 
 export const mockPieData = [

@@ -1,0 +1,15 @@
+{
+  "packages": ["be/packages/*", "fe"],
+  "version": "independent",
+  "npmClient": "npm",
+  "command": {
+    "publish": {
+      "ignoreChanges": ["**/*.md", "**/*.test.ts", "**/dist/**"],
+      "message": "chore(release): publish"
+    },
+    "bootstrap": {
+      "npmClientArgs": ["--no-package-lock"]
+    }
+  },
+  "useWorkspaces": true
+}

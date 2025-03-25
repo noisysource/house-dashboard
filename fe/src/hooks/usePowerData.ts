@@ -1,15 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-
-interface PowerReading {
-  deviceId: string;
-  timestamp: number;
-  power: number;
-  current: number;
-  voltage: number;
-}
+import { IPowerReading } from '@house-dashboard/db-service/src/models';
 
 interface PowerData {
-  devices: Record<string, PowerReading>;
+  channels: Record<string, IPowerReading>;
   totalPower: number;
   totalCurrent: number;
   timestamp?: number;
@@ -17,7 +10,7 @@ interface PowerData {
 
 export const usePowerData = () => {
   const [powerData, setPowerData] = useState<PowerData>({
-    devices: {},
+    channels: {},
     totalPower: 0,
     totalCurrent: 0
   });

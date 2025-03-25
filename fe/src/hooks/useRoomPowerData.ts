@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { ROOM_POWER_QUERY } from '../graphql/queries/queries';
-import { timeRangeToApiPeriod } from './usePowerStats';
+import { timeRangeToApiPeriod } from './usePowerReadings';
+
+import { GET_ROOM_POWER_STATS } from '../graphql/queries/powerStatQueries';
 
 // GraphQL endpoint
 const GRAPHQL_ENDPOINT = process.env.REACT_APP_GRAPHQL_ENDPOINT || 'http://localhost:4000/graphql';
@@ -29,14 +30,14 @@ const useRoomPowerData = ({ timeRange = 'day' }: UseRoomPowerDataProps = {}) => 
   const [roomData, setRoomData] = useState<RoomPowerData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  
+
   // Convert UI timeRange to API period
   const period = timeRangeToApiPeriod[timeRange];
-  
+
   useEffect(() => {
     const fetchRoomPowerData = async () => {
       setIsLoading(true);
-      
+
       try {
         // GraphQL request for room power data
         const response = await fetch(GRAPHQL_ENDPOINT, {
@@ -45,17 +46,17 @@ const useRoomPowerData = ({ timeRange = 'day' }: UseRoomPowerDataProps = {}) => 
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            query: ROOM_POWER_QUERY,
+            query: GET_ROOM_POWER_STATS,
             variables: { period },
           }),
         });
-        
+
         const result = await response.json();
-        
+
         if (result.errors) {
           throw new Error(result.errors[0].message);
         }
-        
+
         setRoomData(result.data.roomPowerData);
         setError(null);
       } catch (err) {
@@ -67,14 +68,14 @@ const useRoomPowerData = ({ timeRange = 'day' }: UseRoomPowerDataProps = {}) => 
         setIsLoading(false);
       }
     };
-    
+
     fetchRoomPowerData();
-    
+
     // Refresh data periodically (every 5 minutes)
     const intervalId = setInterval(fetchRoomPowerData, 5 * 60 * 1000);
     return () => clearInterval(intervalId);
   }, [period]);
-  
+
   return { roomData, isLoading, error };
 };
 

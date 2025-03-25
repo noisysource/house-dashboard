@@ -1,72 +1,94 @@
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
-import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import express from 'express';
-import http from 'http';
+import { createServer } from 'http';
 import cors from 'cors';
-import bodyParser from 'body-parser';
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import { typeDefs } from './schema/typeDefs';
 import path from 'path';
-import { powerResolvers } from './resolvers/powerResolvers';
-import { deviceResolvers } from './resolvers/deviceResolvers';
-import { roomResolvers } from './resolvers/roomResolvers';
+import { buildSchema } from './schema/schema';
 
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
 
-// MongoDB connection
-const MONGO_URI = process.env.MONGO_URI || '';
-
 async function startServer() {
-  // Connect to MongoDB
-  try {
-    await mongoose.connect(MONGO_URI);
-    console.log('Connected to MongoDB');
-  } catch (err) {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
-  }
+  const schema = await buildSchema();
+  console.log('🔨 GraphQL schema built');
 
-  // Express app setup
   const app = express();
-  const httpServer = http.createServer(app);
 
-  const resolvers = {
-    Query: {
-      ...powerResolvers.Query,
-      ...deviceResolvers.Query,
-      ...roomResolvers.Query
-    },
-    Mutation: {
-      ...roomResolvers.Mutation,
-      ...deviceResolvers.Mutation
-    }
-  }
+  // Add middleware
+  app.use(cors());
+  app.use(express.json());
 
   // Apollo Server setup
   const server = new ApolloServer({
-    typeDefs,
-    resolvers: resolvers,
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-    introspection: true,
+    schema,
+
+    formatError: (error) => {
+      // Log errors to console in development
+      console.error('GraphQL Error:', error);
+
+      // Return cleaner error for production
+      return {
+        message: error.message,
+        path: error.path,
+        // Avoid exposing internal details in production
+        ...(process.env.NODE_ENV === 'development' && {
+          extensions: error.extensions
+        })
+      };
+    },
+    plugins: [
+      {
+        // Log resolver timing in development
+        requestDidStart: async () => {
+          return {
+            didEncounterErrors: async ({ errors }) => {
+              if (errors) {
+                for (const error of errors) {
+                  console.error('GraphQL execution error:', error);
+                }
+              }
+            }
+          };
+        }
+      }
+    ]
   });
 
   // Start Apollo Server
   await server.start();
+  console.log('🚀 Apollo Server started');
 
   // Apply middleware
-  app.use(
-    '/graphql',
-    cors<cors.CorsRequest>(),
-    bodyParser.json(),
-    expressMiddleware(server),
-  );
-  // Start server
-  const PORT = process.env.GRAPHQL_PORT || 4000;
-  await new Promise<void>((resolve) => httpServer.listen({ port: PORT }, resolve));
-  console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`);
+  // Apply middleware
+  app.use('/graphql', expressMiddleware(server));
+  // Create HTTP server
+  const httpServer = createServer(app);
+
+  // Set port
+  const PORT = process.env.PORT || 4000;
+
+  // Start HTTP server
+  httpServer.listen(PORT, () => {
+    console.log(`
+    🏠 House Dashboard GraphQL API
+    ================================
+    🌐 Server ready at http://localhost:${PORT}/graphql
+    📖 Explore the API at http://localhost:${PORT}/graphql
+    `);
+  });
+
+  // Handle shutdown
+  process.on('SIGINT', async () => {
+    console.log('Shutting down server...');
+    await server.stop();
+    process.exit(0);
+  });
 }
 
-startServer().catch((err) => console.error('Server start error:', err));
+// Start the server
+startServer().catch(err => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
+});

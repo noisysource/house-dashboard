@@ -5,7 +5,6 @@ import { powerReadings } from './mqtt-service';
 let wss: WebSocketServer;
 
 interface PowerUpdate {
-  devices: Record<string, any>;
   totalPower: number;
   totalCurrent: number;
   timestamp: Date

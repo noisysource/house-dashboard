@@ -13,6 +13,7 @@ import ScenePower from "./scenes/SceneDashboard/ScenePower";
 import SceneDashboard from "./scenes/SceneDashboard/SceneDashboard";
 import SceneRoom from "./scenes/SceneRoom/SceneRoom";
 import SceneDevices from "./scenes/SceneDevices";
+import HomeConfigBuilder from "./components/HomeConfigBuilder";
 
 // Theme context
 export const ColorModeContext = createContext({
@@ -53,6 +54,7 @@ function App() {
                   <Route path="/power" element={<ScenePower />} />
                   <Route path="/room" element={<SceneRoom />} />
                   <Route path="/devices" element={<SceneDevices />} />
+                  <Route path="/config" element={<HomeConfigBuilder />} />
                   {/* Add more routes as needed */}
                 </Routes>
               </div>

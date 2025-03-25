@@ -5,7 +5,6 @@ import http from 'http';
 import cors from 'cors';
 import { setupWebSocketServer } from './services/websocket-service';
 import { connectMqtt } from './services/mqtt-service';
-import powerRoutes from './routes/power-routes';
 import mongoose from 'mongoose';
 
 // Load environment variables
@@ -13,24 +12,9 @@ dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
 
 const app = express();
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/house_dashboard';
-
-// Connect to MongoDB
-mongoose
-    .connect(MONGO_URI)
-    .then(() => {
-        console.log('Connected to MongoDB');
-    })
-    .catch((err) => {
-        console.error('MongoDB connection error:', err);
-    });
-
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// API routes
-app.use('/api/power', powerRoutes);
 
 // Health check endpoint
 app.get('/health', (req: any, res: any) => {

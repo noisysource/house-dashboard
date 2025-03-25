@@ -1,6 +1,6 @@
 import { Box, Card, CardContent, Typography, useTheme } from "@mui/material";
 import Grid from "@mui/material/Grid2"; // Import Grid v2
-import usePowerStats from "../../hooks/usePowerStats";
+import usePowerReadings from "../../hooks/usePowerReadings";
 import { formatWatts, formatAmps, formatKilowattHours } from "../../utils/formatters";
 import PowerMeter from "./PowerMeter";
 import AmpMeter from "./AmpMeter";
@@ -13,7 +13,7 @@ const CONTRACT_MAX_AMPS = 30;
 const ELECTRICITY_COST_PER_KWH = 0.15;
 
 const PowerBriefSection: React.FC = () => {
-  const { stats, selectedPeriod } = usePowerStats();
+  const { stats, selectedPeriod } = usePowerReadings();
   const theme = useTheme();
 
   // Calculate percentage of capacity

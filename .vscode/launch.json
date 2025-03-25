@@ -2,6 +2,33 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Start Mosquitto Container",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "docker-compose",
+      "runtimeArgs": ["up", "-d", "mqtt-broker"],
+    },
+    {
+      "name": "Start DB Service",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "${workspaceFolder}/be/packages/db-service",
+      "env": {
+        "NODE_ENV": "development",
+        "PORT": "3001",
+        "MONGODB_URI": "mongodb://localhost:27017/house-dashboard"
+      },
+      "envFile": "${workspaceFolder}/.env",
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal",
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ]
+    },
+    {
       "name": "Start Power Service",
       "type": "node",
       "request": "launch",
@@ -9,25 +36,20 @@
       "runtimeArgs": ["run", "dev"],
       "cwd": "${workspaceFolder}/be/packages/power-service",
       "env": {
-        "NODE_ENV": "development"
+        "NODE_ENV": "development",
+        "PORT": "3002",
+        "MQTT_HOST": "mqtt://localhost:1883",
+        "MQTT_USERNAME": "",
+        "MQTT_PASSWORD": "",
+        "DB_SERVICE_URL": "http://localhost:3001/api"
       },
       "envFile": "${workspaceFolder}/.env",
       "skipFiles": ["<node_internals>/**"],
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Start Device Service",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "cwd": "${workspaceFolder}/be/packages/device-service",
-      "env": {
-        "NODE_ENV": "development"
-      },
-      "envFile": "${workspaceFolder}/.env",
-      "skipFiles": ["<node_internals>/**"],
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ]
     },
     {
       "name": "Start GraphQL API",
@@ -38,12 +60,18 @@
       "cwd": "${workspaceFolder}/be/packages/graphql-api",
       "env": {
         "NODE_ENV": "development",
-        "MONGO_URI": "mongodb://localhost:27017/house_dashboard",
-        "MQTT_HOST": "mqtt://localhost:1883"
+        "PORT": "4000",
+        "DB_SERVICE_URL": "http://localhost:3001/api",
+        "POWER_SERVICE_URL": "http://localhost:3002/api",
+        "DEVICE_SERVICE_URL": "http://localhost:3003/api"
       },
       "envFile": "${workspaceFolder}/.env",
       "skipFiles": ["<node_internals>/**"],
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ]
     },
     {
       "name": "Start Frontend",
@@ -54,16 +82,51 @@
       "cwd": "${workspaceFolder}/fe",
       "env": {
         "BROWSER": "none",
-        "REACT_APP_GRAPHQL_ENDPOINT": "http://localhost:4000/graphql"
+        "REACT_APP_GRAPHQL_ENDPOINT": "http://localhost:4000/graphql",
+        "REACT_APP_WS_ENDPOINT": "ws://localhost:3002/ws"
       },
       "skipFiles": ["<node_internals>/**"],
       "console": "integratedTerminal"
     },
+    {
+      "name": "Build All Services",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["lerna", "run", "build", "--stream"],
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Lerna Bootstrap",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["lerna", "bootstrap", "--hoist"],
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal"
+    }
   ],
   "compounds": [
     {
+      "name": "Start Backend with Mosquitto",
+      "configurations": ["Start Mosquitto Container", "Start DB Service", "Start Power Service", "Start GraphQL API"]
+    },
+    {
+      "name": "Start Backend Services",
+      "configurations": ["Start DB Service", "Start Power Service", "Start GraphQL API"]
+    },
+    {
       "name": "Full Development Environment",
-      "configurations": ["Start Power Service", "Start Device Service", "Start GraphQL API", "Start Frontend"]
+      "configurations": ["Start Mosquitto Container", "Start DB Service", "Start Power Service", "Start GraphQL API", "Start Frontend"]
+    },
+    {
+      "name": "Setup & Build",
+      "configurations": ["Lerna Bootstrap", "Build All Services"]
     }
   ]
 }

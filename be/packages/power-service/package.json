@@ -1,5 +1,5 @@
 {
-  "name": "power-service",
+  "name": "@house-dashboard/power-service",
   "version": "1.0.0",
   "description": "Power monitoring service for House Dashboard",
   "main": "dist/index.js",
@@ -13,7 +13,6 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.18.2",
-    "mongoose": "^8.12.1",
     "mqtt": "^4.3.7",
     "ws": "^8.13.0"
   },

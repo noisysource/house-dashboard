@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import {
   Box, Button,
-  Card, CardContent, Typography, IconButton, Grid, Switch, useTheme
+  Card, CardContent, Typography, Grid, useTheme
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon } from '@mui/icons-material';
 import { tokens } from '../theme';
 import Header from '../components/common/Header';
-import { useQuery, useMutation } from '@apollo/client';
-import { CREATE_DEVICE, UPDATE_DEVICE, DELETE_DEVICE, GET_DEVICES } from '../graphql/queries/queries';
 import DeviceDialog from '../components/device/CreateEditDeviceDialog';
-import { IDevice } from '../models/Device';
-import { channel } from 'diagnostics_channel';
+import { IDevice } from '@house-dashboard/db-service/src/models/';
+import { CreateDeviceInput } from '../graphql/inputTypes';
+import { useDevices } from '../hooks/useDevice';
 
 const SceneDevices = () => {
   const theme = useTheme();
@@ -20,29 +19,8 @@ const SceneDevices = () => {
   const [currentDevice, setCurrentDevice] = useState<IDevice | null>();
   const [error, setError] = useState<string | null>(null);
 
-  // GraphQL queries and mutations
-  const { data, loading, error: queryError } = useQuery(GET_DEVICES);
+  const { devices, loading, error: queryError, createDevice, updateDevice, deleteDevice } = useDevices();
 
-  const [createDevice] = useMutation(CREATE_DEVICE, {
-    refetchQueries: [{ query: GET_DEVICES }],
-    onError: (error) => {
-      setError(error.message);
-    }
-  });
-
-  const [updateDevice] = useMutation(UPDATE_DEVICE, {
-    refetchQueries: [{ query: GET_DEVICES }],
-    onError: (error) => {
-      setError(error.message);
-    }
-  });
-
-  const [deleteDevice] = useMutation(DELETE_DEVICE, {
-    refetchQueries: [{ query: GET_DEVICES }],
-    onError: (error) => {
-      setError(error.message);
-    }
-  });
 
   // Handle dialog open for create/edit
   const handleOpenDialog = (mode: React.SetStateAction<string>, device: IDevice) => {
@@ -58,7 +36,7 @@ const SceneDevices = () => {
   };
 
   // Handle form field changes
-  const handleChange = (e: any) => {
+  const handleChange = (e: any) => {    
     const { name, value, checked } = e.target;
     setCurrentDevice(prev => ({
       ...prev,
@@ -74,33 +52,26 @@ const SceneDevices = () => {
         setError('Device name is required');
         return;
       }
-      if (!currentDevice.ip) {
+      if (!currentDevice.ipAddress) {
         setError('IP address is required');
         return;
       }
 
       // Format input
-      const input = {
+      const input: CreateDeviceInput = {
         name: currentDevice.name,
-        ip: currentDevice.ip,
         type: currentDevice.type,
-        location: currentDevice.location,
-        active: currentDevice.active,
-        channel: currentDevice.channel,
-        topic: currentDevice.topic
+        ipAddress: currentDevice.ipAddress,
       };
 
       if (dialogMode === 'create') {
-        await createDevice({
-          variables: { input }
-        });
+        await createDevice({name: currentDevice.name, ipAddress: currentDevice.ipAddress, type: currentDevice.type});
       } else {
-        await updateDevice({
-          variables: {
-            id: currentDevice.id,
-            input
-          }
-        });
+        if (currentDevice?.id) {
+          await updateDevice(currentDevice.id, input);
+        } else {
+          throw new Error('Device ID is required for updating a device');
+        }
       }
 
       handleCloseDialog();
@@ -114,24 +85,10 @@ const SceneDevices = () => {
   const handleDeleteDevice = async (id: any) => {
     if (window.confirm('Are you sure you want to delete this device?')) {
       try {
-        await deleteDevice({ variables: { id } });
+        await deleteDevice(id);
       } catch (err) {
         console.error('Error deleting device:', err);
       }
-    }
-  };
-
-  // Toggle device active status
-  const handleToggleActive = async (device: { id: any; active: any; }) => {
-    try {
-      await updateDevice({
-        variables: {
-          id: device.id,
-          input: { ...device, active: !device.active }
-        }
-      });
-    } catch (err) {
-      console.error('Error toggling device status:', err);
     }
   };
 
@@ -153,7 +110,7 @@ const SceneDevices = () => {
       </Box>
 
       <Grid container spacing={3} mt={2}>
-        {data?.devices?.map((device: any) => (
+        {devices?.map((device: IDevice) => (
           device && <Grid item xs={12} sm={6} md={4} key={device.id}>
             <Card
               sx={{
@@ -170,51 +127,19 @@ const SceneDevices = () => {
                     <Typography variant="h5" fontWeight="bold">{device.name}</Typography>
                     <Typography variant="subtitle1" color={colors.greenAccent[400]}>{device.type}</Typography>
                   </Box>
-                  <Box display="flex" alignItems="center">
-                    <Switch
-                      checked={device.active}
-                      onChange={() => handleToggleActive(device)}
-                      color="secondary"
-                      size="small"
-                    />
-                    <IconButton
-                      onClick={() => handleOpenDialog('edit', device)}
-                      sx={{ color: colors.greenAccent[500] }}
-                      size="small"
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      onClick={() => handleDeleteDevice(device.id)}
-                      sx={{ color: colors.redAccent[500] }}
-                      size="small"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
                 </Box>
 
                 <Box mt={2}>
                   <Typography variant="body1">
-                    <strong>IP Address:</strong> {device.ip}
+                    <strong>IP Address:</strong> {device.ipAddress}
                   </Typography>
-                  {device.location && (
+                  {device.rooms && device.rooms.length > 0 ? (
                     <Typography variant="body1">
-                      <strong>Location:</strong> {device.location}
+                      <strong>Location:</strong> {device.rooms.join(', ')}
                     </Typography>
-                  )}
-                  <Typography variant="body1">
-                    <strong>Status:</strong>{' '}
-                    <Box component="span" sx={{
-                      color: device.active ? colors.greenAccent[400] : colors.redAccent[400],
-                      fontWeight: 'bold'
-                    }}>
-                      {device.active ? 'Active' : 'Inactive'}
-                    </Box>
-                  </Typography>
-                  {device.roomId && (
-                    <Typography variant="body1">
-                      <strong>Room:</strong> {device.roomName || device.roomId}
+                  ) : (
+                    <Typography variant="body1" color="textSecondary">
+                      <strong>Location:</strong> Device is lost in space
                     </Typography>
                   )}
                 </Box>
@@ -223,7 +148,7 @@ const SceneDevices = () => {
           </Grid>
         ))}
 
-        {(!data?.devices || data.devices.length === 0) && (
+        {(!devices || devices.length === 0) && (
           <Grid item xs={12}>
             <Card sx={{ backgroundColor: colors.primary[400], p: 3 }}>
               <CardContent sx={{ textAlign: 'center' }}>

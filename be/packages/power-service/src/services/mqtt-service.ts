@@ -1,32 +1,26 @@
 import mqtt from 'mqtt';
-import { IPowerReading, PowerReading } from '../models/PowerReading';
 import { broadcastUpdate } from './websocket-service';
+import { saveProcessedPowerReadings } from '@house-dashboard/db-service/src/operations/powerOperations';
+import { IPowerReading } from '@house-dashboard/db-service/src/models';
 
-interface PowerReadingData {
-  deviceId: string;
-  timestamp: number;
-  power: number;
-  current: number;
-  voltage: number;
-  relayIndex?: number;
-}
 
 // Store the latest power readings in memory for quick access
-export const powerReadings: Record<string, PowerReadingData> = {};
+export const powerReadings: Record<string, IPowerReading> = {};
 
-// MQTT client
+// MQTT client setup (unchanged)
 const brokerUrl = process.env.MQTT_HOST || '';
 const username = process.env.MQTT_USERNAME;
 const password = process.env.MQTT_PASSWORD;
 const topic = process.env.POWER_TOPIC || 'house-dashboard/power/shelly2pm';
 const alltopic = '#';
-// Connection options
+
+// Connection options (unchanged)
 const mqttOptions: mqtt.IClientOptions = {
-  clientId: `power-service-${Math.random().toString(16).substring(2, 8)}`, // Random client ID
+  clientId: `power-service-${Math.random().toString(16).substring(2, 8)}`,
   clean: true
 };
 
-// Only add credentials if provided
+// Only add credentials if provided (unchanged)
 if (username && password) {
   mqttOptions.username = username;
   mqttOptions.password = password;
@@ -34,13 +28,12 @@ if (username && password) {
 
 const mqttClient = mqtt.connect(brokerUrl, mqttOptions);
 
-// Function to calculate and broadcast totals
+// Function to calculate and broadcast totals (unchanged)
 export function updateTotalsAndBroadcast(): void {
-  const totalPower = Object.values(powerReadings).reduce((sum, device) => sum + device.power, 0);
-  const totalCurrent = Object.values(powerReadings).reduce((sum, device) => sum + device.current, 0);
-  
+  const totalPower = Object.values(powerReadings).reduce((sum, reading) => sum + reading.power, 0);
+  const totalCurrent = Object.values(powerReadings).reduce((sum, reading) => sum + reading.current, 0);
+
   broadcastUpdate({
-    devices: powerReadings,
     totalPower,
     totalCurrent,
     timestamp: new Date()
@@ -51,7 +44,7 @@ export function updateTotalsAndBroadcast(): void {
 export function connectMqtt(): void {
   mqttClient.on('connect', () => {
     console.log('Connected to MQTT broker');
-    
+
     // Subscribe to power topics
     mqttClient.subscribe(alltopic, (err) => {
       if (err) {
@@ -66,7 +59,6 @@ export function connectMqtt(): void {
   mqttClient.on('message', async (topic, message) => {
     // Log all messages for debugging
     console.log(`MQTT Message: Topic=${topic}`);
-    const data2 = JSON.parse(message.toString());
 
     try {
       // Handle custom topic from Shelly script
@@ -75,56 +67,27 @@ export function connectMqtt(): void {
         try {
           const data = JSON.parse(message.toString());
           const deviceId = data.deviceId || 'unknown-device';
+          const timestamp = new Date();
 
-          // Process each channel (relay)
-          if (data.channels && Array.isArray(data.channels)) {
-            // Prepare bulk insert for MongoDB
-            const readings: IPowerReading[] = [];
-            const timestamp = new Date();
-            
-            data.channels.forEach((channel: any) => {
-              const readingId = `${deviceId}-relay${channel.relay}`;
+          try {
+            // Use the db-service function to handle all database operations
+            const reading = await saveProcessedPowerReadings(data, timestamp);
 
-              // Update in-memory readings
-              powerReadings[readingId] = {
-                deviceId,
-                timestamp: Date.now(),
-                power: channel.power || 0,
-                current: channel.current || 0,
-                voltage: channel.voltage || 230,
-                relayIndex: channel.relay
-              };
-
-              // Add to MongoDB batch
-              readings.push(new PowerReading({
-                timestamp,
-                power: channel.power || 0,
-                current: channel.current || 0,
-                voltage: channel.voltage || 230,
-                deviceId,
-                relayIndex: channel.relay
-              }));
-
-              //console.log(`Updated power reading for ${readingId}: ${channel.power}W`);
-            });
-            
-            // Save to MongoDB (bulk insert)
-            try {
-              if (readings.length > 0) {
-                await PowerReading.insertMany(readings);
-                //console.log(`Saved ${readings.length} power readings to MongoDB`);
-              }
-            } catch (dbError) {
-              console.error('Failed to save readings to MongoDB:', dbError);
+            // Update in-memory readings based on the returned data
+            if (reading && reading.id) {
+              powerReadings[reading.id] = reading;
             }
-
+          
             // Update WebSocket clients
             updateTotalsAndBroadcast();
+
+          } catch (dbError) {
+            console.error('Failed to save readings to MongoDB:', dbError);
           }
+
         } catch (err) {
           console.error('Error processing custom topic message:', err);
         }
-        return;
       }
     } catch (error) {
       console.error('Error processing MQTT message:', error);

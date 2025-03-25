@@ -20,7 +20,7 @@ services:
     environment:
       - PORT=3001
       - MQTT_BROKER=mqtt://mqtt-broker:1883
-      - MQTT_USERNAME=house_dashboard
+      - MQTT_USERNAME=house-dashboard
       - MQTT_PASSWORD=your_password
       - MQTT_TOPIC=shellies/#
     depends_on:
@@ -38,7 +38,6 @@ services:
     depends_on:
       - power-service
 
-  # Add to your existing docker-compose.yml
   mongodb:
     image: mongo:latest
     container_name: house-dashboard-mongodb
@@ -56,7 +55,7 @@ services:
     ports:
       - "4000:4000"
     environment:
-      - MONGO_URI=mongodb://mongodb:27017/house_dashboard
+      - MONGO_URI=mongodb://mongodb:27017/house-dashboard
       - MQTT_HOST=mqtt://mqtt-broker:1883
       - PORT=4000
     depends_on:

@@ -11,6 +11,7 @@
     "@fullcalendar/interaction": "^6.1.15",
     "@fullcalendar/react": "^6.1.15",
     "@fullcalendar/timegrid": "^6.1.15",
+    "@house-dashboard/db-service": "1.0.0",
     "@mui/icons-material": "^6.4.6",
     "@mui/material": "^6.4.6",
     "@mui/x-data-grid": "^7.27.2",
@@ -34,6 +35,7 @@
     "react-pro-sidebar": "^1.1.0",
     "react-router-dom": "^7.2.0",
     "react-scripts": "5.0.1",
+    "reactflow": "^11.11.4",
     "recharts": "^2.15.1",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4",
@@ -64,6 +66,8 @@
     ]
   },
   "devDependencies": {
-    "@types/fullcalendar": "^3.8.0"
+    "@types/fullcalendar": "^3.8.0",
+    "@types/react-beautiful-dnd": "^13.1.8",
+    "react-flow-types": "^0.2.0-beta.6"
   }
 }
